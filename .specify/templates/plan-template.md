@@ -24,7 +24,7 @@
 
 **Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]
+**Testing**: Manual verification (no automated tests per constitution)
 
 **Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
 
@@ -40,7 +40,12 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+[Gates determined based on constitution file. Key gates:
+- Simplicity: solution complexity MUST be justified
+- Naming: all names must reveal intent
+- Size: functions ≤20 lines, files ≤300 lines
+- Comments: only WHY comments allowed
+- Verification: change must be manually exercised before commit]
 
 ## Project Structure
 

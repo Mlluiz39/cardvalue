@@ -1,0 +1,32 @@
+# Flutter
+.dart_tool/
+.packages
+build/
+flutter_export_environment.sh
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+*.lock
+
+# Dart
+.pub/
+.pub-cache/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# General
+*.log
+*.swp
+*.tmp
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.production

@@ -1,50 +1,76 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!-- Sync Impact Report
+  Version change: 0.0.0 → 1.0.0
+  Modified principles: (all) placeholders → concrete Clean Code principles
+    - [PRINCIPLE_1_NAME] → I. Simplicity First (KISS/YAGNI)
+    - [PRINCIPLE_2_NAME] → II. Meaningful Names
+    - [PRINCIPLE_3_NAME] → III. Single Responsibility
+    - [PRINCIPLE_4_NAME] → IV. Self-Documenting Code
+    - [PRINCIPLE_5_NAME] → V. Manual Verification
+  Added sections:
+    - Constraints & Code Standards
+    - Development Workflow
+  Removed sections: (none)
+  Templates requiring updates: ✅ .specify/templates/plan-template.md
+  Follow-up TODOs: (none)
+-->
+
+# cardvalue Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Simplicity First (KISS/YAGNI)
+Start with the simplest solution that works. No premature abstractions,
+design patterns, or dependencies. Complexity MUST be justified by proven
+need, not anticipated future requirements. A small codebase is a feature.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Meaningful Names
+Every name MUST reveal intent. Choose names that answer: why it exists,
+what it does, and how it is used. Avoid abbreviations, acronyms, and
+single-letter names (except loop counters). Rename whenever a better
+name emerges.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Single Responsibility
+Each function, module, and file MUST have exactly one clear responsibility.
+Functions MUST fit on a screen (~20 lines max). Files MUST stay under
+300 lines. If a component is doing more than one thing, split it.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Self-Documenting Code
+Code MUST be readable without comments. Express intent through naming,
+structure, and small abstractions. Comments explain WHY (rationale,
+trade-offs), never WHAT (the code already says that). Update comments
+when changing code — incorrect comments are worse than none.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Manual Verification
+No automated tests. Correctness is verified through manual testing,
+interactive exploration, and visual inspection. Every change MUST be
+exercised manually before commit. The small codebase makes thorough
+manual verification practical and fast.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Constraints & Code Standards
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- **Formatting**: Use consistent indentation and style. No linter required
+  — enforce discipline through code review.
+- **Dependencies**: Minimize external dependencies. Only use what is
+  strictly necessary. Prefer standard library solutions.
+- **File size**: Maximum 300 lines per source file.
+- **Function size**: Maximum ~20 lines per function.
+- **No dead code**: Remove commented-out code and unused imports
+  immediately.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Development Workflow
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+1. Understand the problem fully before writing code.
+2. Write the simplest possible solution.
+3. Manually verify every code path.
+4. Review for naming, duplication, and clarity.
+5. Commit small, coherent changes with descriptive messages.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution defines the non-negotiable principles of the project.
+Amendments require:
+- A documented rationale for the change.
+- Review and approval by at least one other contributor.
+- Version bump per semantic versioning rules.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-05-18 | **Last Amended**: 2026-05-18

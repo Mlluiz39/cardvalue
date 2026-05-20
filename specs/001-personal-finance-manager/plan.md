@@ -1,0 +1,119 @@
+# Implementation Plan: Personal Finance Manager
+
+**Branch**: `001-personal-finance-manager` | **Date**: 2026-05-18 | **Spec**: [spec.md](spec.md)
+
+**Input**: Feature specification from `specs/001-personal-finance-manager/spec.md`
+
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
+
+## Summary
+
+Cross-platform personal finance manager (Flutter) focused on credit card installment tracking, invoice reconciliation, comprehensive expense/income management, financial dashboard with BI visualizations, debt/goal tracking, and AI-powered financial insights. Backend powered by Supabase (PostgreSQL, RLS, Edge Functions) with OCR for receipt processing and invoice import.
+
+## Technical Context
+
+**Language/Version**: Dart 3.x (Flutter 3.x)
+
+**Primary Dependencies**: Flutter, Material 3, GoRouter, Riverpod, Flutter Hooks, Responsive Framework, FL Chart, Lottie, Supabase Dart SDK, Google ML Kit (OCR), Firebase Cloud Messaging, OpenAI API, local encryption (flutter_secure_storage)
+
+**Storage**: Supabase PostgreSQL (primary), Supabase Storage (receipts/files), local SQLite cache (offline)
+
+**Testing**: Manual verification (no automated tests per constitution)
+
+**Target Platform**: iOS 15+, Android 8+, modern web browsers (Chrome, Safari, Firefox, Edge)
+
+**Project Type**: Mobile-first web application (Flutter)
+
+**Performance Goals**: Dashboard load <2s with 12 months of history, 60fps animations, smooth page transitions
+
+**Constraints**: Offline-capable (view cached data), responsive layout (phone/tablet/desktop), <200ms p95 API response time for core CRUD operations
+
+**Scale/Scope**: Single-user personal finance manager; future multi-tenant SaaS. ~30 screens, ~15 data entities, AI insights layer.
+
+## Constitution Check
+
+*GATE: Initial pass before Phase 0. Re-checked after Phase 1 design below.*
+
+| Gate | Status | Rationale |
+|------|--------|-----------|
+| **I. Simplicity (KISS/YAGNI)** | ✅ PASS | Core feature set is well-defined; no speculative abstractions. Clean Architecture + Feature First pattern is justified by project size (30+ screens, 15 entities). |
+| **II. Meaningful Names** | ✅ PASS | All entity names, feature names, and contract names follow domain language (Purchase, Installment, InvoiceCycle, ReconciliationReport). |
+| **III. Single Responsibility** | ✅ PASS | Feature-based modularization ensures each module has one responsibility. Functions ≤20 lines, files ≤300 lines per constitution. |
+| **IV. Self-Documenting Code** | ✅ PASS | Domain-driven naming makes code readable without comments. Only WHY comments used (architecture decisions, trade-offs). |
+| **V. Manual Verification** | ✅ PASS | Constitution states no automated tests. All changes manually exercised before commit. |
+| **Complexity Tracking** | N/A | No unjustified violations. |
+
+**GATE: PASSED** — No violations requiring complexity justification.
+
+### Post-Design Re-evaluation (Phase 1 complete)
+
+| Gate | Status | Post-Design Assessment |
+|------|--------|----------------------|
+| **I. Simplicity (KISS/YAGNI)** | ✅ PASS | 4 Edge Functions with single responsibilities. Drift + manual sync layer (~150 lines) instead of Brick/PowerSync. RLS with single-policy-per-table pattern. No premature abstractions. |
+| **II. Meaningful Names** | ✅ PASS | All entities use domain language (Purchase, Installment, InvoiceCycle, ReconciliationReport). Repository methods follow CRUD naming convention. Edge Functions named by action (reconcile-invoice, generate-insights). |
+| **III. Single Responsibility** | ✅ PASS | Each feature module has one domain (auth, cards, dashboard, etc.). Each Edge Function does one thing. Each repository has CRUD + sync. Functions ≤20 lines, files ≤300 lines. |
+| **IV. Self-Documenting Code** | ✅ PASS | Contracts use domain language; data model is self-explanatory. Only rationale documented in research.md (why FL Chart over Syncfusion, why Drift over Brick). |
+| **V. Manual Verification** | ✅ PASS | All contracts and data models designed for manual verification. Sync logic is a single ~150-line service. Data flow is linear and inspectable. |
+| **Complexity Tracking** | N/A | No unjustified complexity added. 15 entities justified by feature spec. 4 Edge Functions justified by distinct responsibilities. |
+
+**FINAL GATE: PASSED** — Design is constitution-compliant.
+
+## Project Structure
+
+### Documentation (this feature)
+
+```text
+specs/001-personal-finance-manager/
+├── plan.md              # This file (implementation plan)
+├── research.md          # Phase 0 — technology decisions
+├── data-model.md        # Phase 1 — entities, relationships, indexes, RLS
+├── quickstart.md        # Phase 1 — project setup guide
+├── contracts/           # Phase 1 — interface contracts
+│   ├── edge-functions.md
+│   ├── navigation-routes.md
+│   ├── widget-contracts.md
+│   └── data-access-patterns.md
+└── tasks.md             # Phase 2 — development tasks (generated by /speckit.tasks)
+```
+
+### Source Code (repository root)
+
+```text
+lib/
+├── core/                  # Shared infrastructure: theme, constants, errors, network, extensions
+│   ├── theme/
+│   ├── constants/
+│   ├── errors/
+│   ├── network/
+│   └── extensions/
+├── shared/                # Reusable widgets and utilities across features
+│   ├── widgets/           # CreditCardWidget, TransactionTile, FinancialChart, etc.
+│   └── utils/             # Formatters, validators, date helpers
+├── features/              # Feature-first modularization
+│   ├── auth/              # Login, register, password recovery, social login
+│   ├── dashboard/         # BI dashboard: cards, charts, summaries
+│   ├── cards/             # Credit card CRUD, card management
+│   ├── transactions/      # Income/expense CRUD, transaction list
+│   ├── installments/      # Installment generation, progress tracking
+│   ├── invoices/          # Invoice management, reconciliation
+│   ├── debts/             # Debt tracking, payoff projection
+│   ├── goals/             # Savings goals, progress tracking
+│   ├── ai/                # AI insights, analysis, alerts
+│   ├── calendar/          # Financial calendar view
+│   ├── reports/           # Reports and data export
+│   └── settings/          # User preferences, profile, theme
+├── services/              # Cross-cutting services: Supabase, OCR, AI, notifications
+├── routes/                # GoRouter configuration, navigation
+└── main.dart              # App entry point
+```
+
+**Structure Decision**: Feature-first Clean Architecture — each feature has its own `data/`, `domain/`, and `presentation/` layers internally, sharing infrastructure through `core/` and `shared/`. Supabase serves as the single backend (database, auth, storage, edge functions).
+
+## Complexity Tracking
+
+> **Fill ONLY if Constitution Check has violations that must be justified**
+
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
