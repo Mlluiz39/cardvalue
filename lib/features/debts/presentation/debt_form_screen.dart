@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../shared/utils/validators.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/models/debt.dart';
 import 'debt_providers.dart';
@@ -38,7 +40,7 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
 
     final userId = ref.read(userIdProvider);
     if (userId == null) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuário não autenticado')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Usuário não autenticado'), backgroundColor: AppColors.expense));
       setState(() => _loading = false);
       return;
     }
@@ -64,7 +66,7 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao salvar: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Erro ao salvar dívida'), backgroundColor: AppColors.expense));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -78,14 +80,18 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: AppSpacing.screenPadding,
           children: [
-            TextFormField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Título'), validator: (v) => v == null || v.trim().isEmpty ? 'Campo obrigatório' : null),
-            TextFormField(controller: _amountCtrl, decoration: const InputDecoration(labelText: 'Valor Total'), keyboardType: TextInputType.number, validator: (v) => v == null || v.trim().isEmpty ? 'Campo obrigatório' : null),
-            TextFormField(controller: _interestCtrl, decoration: const InputDecoration(labelText: 'Taxa de Juros (%)'), keyboardType: TextInputType.number),
-            TextFormField(controller: _installmentsCtrl, decoration: const InputDecoration(labelText: 'Parcelas'), keyboardType: TextInputType.number),
+            TextFormField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Título'), validator: Validators.required),
+            const SizedBox(height: AppSpacing.lg),
+            TextFormField(controller: _amountCtrl, decoration: const InputDecoration(labelText: 'Valor Total', prefixText: 'R\$ '), keyboardType: TextInputType.number, validator: Validators.amount),
+            const SizedBox(height: AppSpacing.lg),
+            TextFormField(controller: _interestCtrl, decoration: const InputDecoration(labelText: 'Taxa de Juros (%)', suffixText: '%'), keyboardType: TextInputType.number),
+            const SizedBox(height: AppSpacing.lg),
+            TextFormField(controller: _installmentsCtrl, decoration: const InputDecoration(labelText: 'Parcelas'), keyboardType: TextInputType.number, validator: Validators.positiveInt),
+            const SizedBox(height: AppSpacing.lg),
             DropdownButtonFormField<String>(
-              initialValue: _priority,
+              value: _priority,
               decoration: const InputDecoration(labelText: 'Prioridade'),
               items: const [
                 DropdownMenuItem(value: 'low', child: Text('Baixa')),
@@ -94,7 +100,7 @@ class _DebtFormScreenState extends ConsumerState<DebtFormScreen> {
               ],
               onChanged: (v) => setState(() => _priority = v ?? 'medium'),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xl),
             SizedBox(
               width: double.infinity,
               child: FilledButton(

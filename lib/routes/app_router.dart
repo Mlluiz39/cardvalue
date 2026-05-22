@@ -1,76 +1,184 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../features/auth/presentation/auth_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../features/auth/presentation/auth_providers.dart';
+import '../features/auth/presentation/auth_screen.dart';
+import '../features/onboarding/presentation/onboarding_screen.dart';
+
+// Dashboard
+import '../features/dashboard/presentation/dashboard_screen.dart';
+
+// Cards
 import '../features/cards/presentation/card_list_screen.dart';
 import '../features/cards/presentation/card_form_screen.dart';
 import '../features/cards/presentation/card_detail_screen.dart';
-import '../features/installments/presentation/purchase_detail_screen.dart';
-import '../features/installments/presentation/purchase_form_screen.dart';
-import '../features/dashboard/presentation/dashboard_screen.dart';
-import '../features/invoices/presentation/reconciliation_screen.dart';
-import '../features/invoices/presentation/invoice_list_screen.dart';
+
+// Transactions
 import '../features/transactions/presentation/transaction_list_screen.dart';
 import '../features/transactions/presentation/transaction_form_screen.dart';
 import '../features/transactions/presentation/transaction_detail_screen.dart';
-import '../features/debts/presentation/debt_list_screen.dart';
-import '../features/debts/presentation/debt_form_screen.dart';
-import '../features/debts/presentation/debt_detail_screen.dart';
+
+// Calendar
+import '../features/calendar/presentation/calendar_screen.dart';
+
+// Reports
+import '../features/reports/presentation/reports_screen.dart';
+
+// Purchases
+import '../features/installments/presentation/purchase_form_screen.dart';
+import '../features/installments/presentation/purchase_detail_screen.dart';
+
+// Invoices
+import '../features/invoices/presentation/invoice_list_screen.dart';
+import '../features/invoices/presentation/reconciliation_screen.dart';
+import '../services/invoice_parser_service.dart';
+
+// Goals
 import '../features/goals/presentation/goal_list_screen.dart';
 import '../features/goals/presentation/goal_form_screen.dart';
 import '../features/goals/presentation/goal_detail_screen.dart';
+
+// Debts
+import '../features/debts/presentation/debt_list_screen.dart';
+import '../features/debts/presentation/debt_form_screen.dart';
+import '../features/debts/presentation/debt_detail_screen.dart';
+
+// AI
 import '../features/ai/presentation/insights_screen.dart';
-import '../features/calendar/presentation/calendar_screen.dart';
-import '../features/reports/presentation/reports_screen.dart';
+
+// Settings
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/settings/presentation/category_management_screen.dart';
 import '../features/settings/presentation/tag_management_screen.dart';
 
-final _navigatorKey = GlobalKey<NavigatorState>();
-final _shellKey = GlobalKey<NavigatorState>();
+import '../shared/widgets/placeholder_widget.dart';
+
+class MainShell extends StatelessWidget {
+  final Widget child;
+  const MainShell({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: child,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _calcSelectedIndex(context),
+        onDestinationSelected: (idx) => _onItemTapped(idx, context),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: 'Dashboard'),
+          NavigationDestination(icon: Icon(Icons.credit_card_outlined), selectedIcon: Icon(Icons.credit_card), label: 'Cartões'),
+          NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Transações'),
+          NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: 'Calendário'),
+          NavigationDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart), label: 'Relatórios'),
+        ],
+      ),
+    );
+  }
+
+  int _calcSelectedIndex(BuildContext context) {
+    final location = GoRouterState.of(context).uri.toString();
+    if (location.startsWith('/dashboard')) return 0;
+    if (location.startsWith('/cards')) return 1;
+    if (location.startsWith('/transactions')) return 2;
+    if (location.startsWith('/calendar')) return 3;
+    if (location.startsWith('/reports')) return 4;
+    return 0;
+  }
+
+  void _onItemTapped(int index, BuildContext context) {
+    switch (index) {
+      case 0: context.go('/dashboard');
+      case 1: context.go('/cards');
+      case 2: context.go('/transactions');
+      case 3: context.go('/calendar');
+      case 4: context.go('/reports');
+    }
+  }
+}
+
+CustomTransitionPage<T> _buildPageWithTransition<T>({required Widget child, required LocalKey key}) {
+  return CustomTransitionPage<T>(
+    key: key,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(opacity: animation, child: child);
+    },
+  );
+}
 
 class AppRouter {
   static GoRouter router(WidgetRef ref) {
     final isAuth = ref.watch(isAuthenticatedProvider);
+
     return GoRouter(
-      navigatorKey: _navigatorKey,
       initialLocation: '/dashboard',
       redirect: (context, state) {
-        final loggedIn = isAuth;
-        final loggingIn = state.matchedLocation == '/login';
-        if (!loggedIn && !loggingIn) return '/login';
-        if (loggedIn && loggingIn) return '/dashboard';
+        final isOnboarding = state.matchedLocation == '/onboarding';
+        final isLoggingIn = state.matchedLocation == '/login';
+
+        if (!isAuth && !isLoggingIn && !isOnboarding) return '/login';
+        if (isAuth && isLoggingIn) return '/dashboard';
         return null;
       },
       routes: [
         GoRoute(
           path: '/login',
-          builder: (_, __) => const LoginScreen(),
+          pageBuilder: (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const LoginScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/onboarding',
+          pageBuilder: (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const OnboardingScreen(),
+          ),
         ),
         ShellRoute(
-          navigatorKey: _shellKey,
           builder: (context, state, child) => MainShell(child: child),
           routes: [
             GoRoute(
               path: '/dashboard',
-              builder: (_, __) => const DashboardScreen(),
+              pageBuilder: (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const DashboardScreen(),
+              ),
             ),
             GoRoute(
               path: '/cards',
-              builder: (_, __) => const CardListScreen(),
+              pageBuilder: (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const CardListScreen(),
+              ),
               routes: [
                 GoRoute(
                   path: 'new',
-                  builder: (_, __) => const CardFormScreen(),
+                  pageBuilder: (context, state) => _buildPageWithTransition(
+                    key: state.pageKey,
+                    child: const CardFormScreen(),
+                  ),
                 ),
                 GoRoute(
-                  path: ':id',
-                  builder: (_, state) => CardDetailScreen(cardId: state.pathParameters['id']!),
+                  path: ':cardId',
+                  pageBuilder: (context, state) {
+                    final cardId = state.pathParameters['cardId']!;
+                    return _buildPageWithTransition(
+                      key: state.pageKey,
+                      child: CardDetailScreen(cardId: cardId),
+                    );
+                  },
                   routes: [
                     GoRoute(
                       path: 'edit',
-                      builder: (_, state) => CardFormScreen(cardId: state.pathParameters['id']),
+                      pageBuilder: (context, state) {
+                        final cardId = state.pathParameters['cardId']!;
+                        return _buildPageWithTransition(
+                          key: state.pageKey,
+                          child: CardFormScreen(cardId: cardId),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -78,19 +186,37 @@ class AppRouter {
             ),
             GoRoute(
               path: '/transactions',
-              builder: (_, __) => const TransactionListScreen(),
+              pageBuilder: (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const TransactionListScreen(),
+              ),
               routes: [
                 GoRoute(
                   path: 'new',
-                  builder: (_, __) => const TransactionFormScreen(),
+                  pageBuilder: (context, state) => _buildPageWithTransition(
+                    key: state.pageKey,
+                    child: const TransactionFormScreen(),
+                  ),
                 ),
                 GoRoute(
-                  path: ':id',
-                  builder: (_, state) => TransactionDetailScreen(transactionId: state.pathParameters['id']!),
+                  path: ':transactionId',
+                  pageBuilder: (context, state) {
+                    final transactionId = state.pathParameters['transactionId']!;
+                    return _buildPageWithTransition(
+                      key: state.pageKey,
+                      child: TransactionDetailScreen(transactionId: transactionId),
+                    );
+                  },
                   routes: [
                     GoRoute(
                       path: 'edit',
-                      builder: (_, state) => TransactionFormScreen(transactionId: state.pathParameters['id']),
+                      pageBuilder: (context, state) {
+                        final transactionId = state.pathParameters['transactionId']!;
+                        return _buildPageWithTransition(
+                          key: state.pageKey,
+                          child: TransactionFormScreen(transactionId: transactionId),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -98,119 +224,165 @@ class AppRouter {
             ),
             GoRoute(
               path: '/calendar',
-              builder: (_, __) => const CalendarScreen(),
+              pageBuilder: (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const CalendarScreen(),
+              ),
             ),
             GoRoute(
               path: '/reports',
-              builder: (_, __) => const ReportsScreen(),
+              pageBuilder: (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const ReportsScreen(),
+              ),
             ),
           ],
         ),
+        // Routes outside shell
         GoRoute(
           path: '/purchases/new',
-          builder: (_, __) => const PurchaseFormScreen(),
+          pageBuilder: (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const PurchaseFormScreen(),
+          ),
         ),
         GoRoute(
-          path: '/purchases/:id',
-          builder: (_, state) => PurchaseDetailScreen(purchaseId: state.pathParameters['id']!),
+          path: '/purchases/:purchaseId',
+          pageBuilder: (context, state) {
+            final purchaseId = state.pathParameters['purchaseId']!;
+            return _buildPageWithTransition(
+              key: state.pageKey,
+              child: PurchaseDetailScreen(purchaseId: purchaseId),
+            );
+          },
         ),
         GoRoute(
-          path: '/invoices/:id',
-          builder: (_, state) => InvoiceListScreen(cardId: state.pathParameters['id']!),
+          path: '/invoices/:cardId',
+          pageBuilder: (context, state) {
+            final cardId = state.pathParameters['cardId']!;
+            return _buildPageWithTransition(
+              key: state.pageKey,
+              child: InvoiceListScreen(cardId: cardId),
+            );
+          },
           routes: [
             GoRoute(
               path: 'reconciliation',
-              builder: (_, state) => ReconciliationScreen(invoiceId: state.pathParameters['id']!),
+              pageBuilder: (context, state) {
+                final cardId = state.pathParameters['cardId']!;
+                final items = state.extra as List<InvoiceLineItem>?;
+                return _buildPageWithTransition(
+                  key: state.pageKey,
+                  child: ReconciliationScreen(cardId: cardId, parsedItems: items ?? []),
+                );
+              },
             ),
           ],
         ),
         GoRoute(
           path: '/goals',
-          builder: (_, __) => const GoalListScreen(),
+          pageBuilder: (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const GoalListScreen(),
+          ),
           routes: [
-            GoRoute(path: 'new', builder: (_, __) => const GoalFormScreen()),
-            GoRoute(path: ':id', builder: (_, state) => GoalDetailScreen(goalId: state.pathParameters['id']!)),
+            GoRoute(
+              path: 'new',
+              pageBuilder: (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const GoalFormScreen(),
+              ),
+            ),
+            GoRoute(
+              path: ':goalId',
+              pageBuilder: (context, state) {
+                final goalId = state.pathParameters['goalId']!;
+                return _buildPageWithTransition(
+                  key: state.pageKey,
+                  child: GoalDetailScreen(goalId: goalId),
+                );
+              },
+            ),
           ],
         ),
         GoRoute(
           path: '/debts',
-          builder: (_, __) => const DebtListScreen(),
+          pageBuilder: (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const DebtListScreen(),
+          ),
           routes: [
-            GoRoute(path: 'new', builder: (_, __) => const DebtFormScreen()),
-            GoRoute(path: ':id', builder: (_, state) => DebtDetailScreen(debtId: state.pathParameters['id']!)),
+            GoRoute(
+              path: 'new',
+              pageBuilder: (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const DebtFormScreen(),
+              ),
+            ),
+            GoRoute(
+              path: ':debtId',
+              pageBuilder: (context, state) {
+                final debtId = state.pathParameters['debtId']!;
+                return _buildPageWithTransition(
+                  key: state.pageKey,
+                  child: DebtDetailScreen(debtId: debtId),
+                );
+              },
+            ),
           ],
         ),
         GoRoute(
           path: '/ai/insights',
-          builder: (_, __) => const InsightsScreen(),
+          pageBuilder: (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const InsightsScreen(),
+          ),
         ),
         GoRoute(
           path: '/settings',
-          builder: (_, __) => const SettingsScreen(),
+          pageBuilder: (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const SettingsScreen(),
+          ),
           routes: [
-            GoRoute(path: 'profile', builder: (_, __) => const PlaceholderWidget('Perfil')),
-            GoRoute(path: 'categories', builder: (_, __) => const CategoryManagementScreen()),
-            GoRoute(path: 'tags', builder: (_, __) => const TagManagementScreen()),
-            GoRoute(path: 'notifications', builder: (_, __) => const PlaceholderWidget('Notificações')),
-            GoRoute(path: 'appearance', builder: (_, __) => const PlaceholderWidget('Aparência')),
+            GoRoute(
+              path: 'profile',
+              pageBuilder: (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const PlaceholderWidget(label: 'Perfil'),
+              ),
+            ),
+            GoRoute(
+              path: 'categories',
+              pageBuilder: (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const CategoryManagementScreen(),
+              ),
+            ),
+            GoRoute(
+              path: 'tags',
+              pageBuilder: (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const TagManagementScreen(),
+              ),
+            ),
+            GoRoute(
+              path: 'notifications',
+              pageBuilder: (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const PlaceholderWidget(label: 'Notificações'),
+              ),
+            ),
+            GoRoute(
+              path: 'appearance',
+              pageBuilder: (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const PlaceholderWidget(label: 'Aparência'),
+              ),
+            ),
           ],
         ),
       ],
-    );
-  }
-}
-
-class PlaceholderWidget extends StatelessWidget {
-  final String label;
-
-  const PlaceholderWidget(this.label, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(label)),
-      body: Center(child: Text(label, style: Theme.of(context).textTheme.headlineMedium)),
-    );
-  }
-}
-
-class MainShell extends StatelessWidget {
-  final Widget child;
-
-  const MainShell({super.key, required this.child});
-
-  static const _routes = [
-    '/dashboard',
-    '/cards',
-    '/transactions',
-    '/calendar',
-    '/reports',
-  ];
-
-  int _selectedIndex(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
-    for (var i = 0; i < _routes.length; i++) {
-      if (location.startsWith(_routes[i])) return i;
-    }
-    return 0;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final index = _selectedIndex(context);
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        onDestinationSelected: (i) => context.go(_routes[i]),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          NavigationDestination(icon: Icon(Icons.credit_card), label: 'Cartões'),
-          NavigationDestination(icon: Icon(Icons.receipt_long), label: 'Transações'),
-          NavigationDestination(icon: Icon(Icons.calendar_month), label: 'Calendário'),
-          NavigationDestination(icon: Icon(Icons.bar_chart), label: 'Relatórios'),
-        ],
-      ),
     );
   }
 }

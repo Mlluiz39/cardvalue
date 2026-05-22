@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../core/extensions/date_extensions.dart';
+import '../../../shared/utils/currency_formatter.dart';
 import 'transaction_providers.dart';
 import '../domain/models/transaction.dart';
-import 'package:intl/intl.dart';
 
 class TransactionDetailScreen extends ConsumerWidget {
   final String transactionId;
@@ -40,7 +42,22 @@ class TransactionDetailScreen extends ConsumerWidget {
           }
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Erro: $e')),
+        error: (e, _) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: AppColors.expense),
+              const SizedBox(height: 16),
+              const Text('Erro ao carregar transação'),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () => ref.invalidate(transactionDetailProvider(transactionId)),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Tentar novamente'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -53,11 +70,11 @@ class TransactionDetailScreen extends ConsumerWidget {
         content: const Text('Tem certeza que deseja excluir esta transação?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => context.pop(false),
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => context.pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Excluir'),
           ),
@@ -136,7 +153,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                 const Text('RECEBIMENTO', style: TextStyle(color: Colors.white70, letterSpacing: 2, fontSize: 12, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Text(
-                  'R\$ ${t.amount.toStringAsFixed(2)}',
+                  CurrencyFormatter.format(t.amount),
                   style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 24),
@@ -152,7 +169,7 @@ class TransactionDetailScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 32),
-          _premiumDetailRow('Data', DateFormat('dd/MM/yyyy HH:mm').format(t.transactionDate)),
+          _premiumDetailRow('Data', t.transactionDate.format('dd/MM/yyyy HH:mm')),
           const Divider(height: 32),
           _premiumDetailRow('Categoria', _categoryLabel(t.categoryId)),
           const Divider(height: 32),
@@ -227,7 +244,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                     const SizedBox(height: 24),
                     const Text('- - - - - - - - - - - - - - - - - - - - - -', style: TextStyle(color: Colors.grey)),
                     const SizedBox(height: 16),
-                    _receiptRow('DATA', DateFormat('dd/MM/yy HH:mm').format(t.transactionDate)),
+                    _receiptRow('DATA', t.transactionDate.format('dd/MM/yy HH:mm')),
                     _receiptRow('MÉTODO', _paymentMethodLabel(t.paymentMethod).toUpperCase()),
                     _receiptRow('CATEGORIA', _categoryLabel(t.categoryId).toUpperCase()),
                     const SizedBox(height: 16),
@@ -237,7 +254,7 @@ class TransactionDetailScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('VALOR TOTAL', style: TextStyle(fontFamily: 'monospace', fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text('R\$ ${t.amount.toStringAsFixed(2)}', style: const TextStyle(fontFamily: 'monospace', fontSize: 20, fontWeight: FontWeight.bold)),
+                        Text(CurrencyFormatter.format(t.amount), style: const TextStyle(fontFamily: 'monospace', fontSize: 20, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     const SizedBox(height: 32),

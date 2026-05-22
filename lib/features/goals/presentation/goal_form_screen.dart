@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../shared/utils/validators.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/models/goal.dart';
 import 'goal_providers.dart';
@@ -35,7 +37,7 @@ class _GoalFormScreenState extends ConsumerState<GoalFormScreen> {
 
     final userId = ref.read(userIdProvider);
     if (userId == null) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuário não autenticado')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Usuário não autenticado'), backgroundColor: AppColors.expense));
       setState(() => _loading = false);
       return;
     }
@@ -53,7 +55,7 @@ class _GoalFormScreenState extends ConsumerState<GoalFormScreen> {
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao salvar: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Erro ao salvar meta'), backgroundColor: AppColors.expense));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -67,12 +69,14 @@ class _GoalFormScreenState extends ConsumerState<GoalFormScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: AppSpacing.screenPadding,
           children: [
-            TextFormField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Título'), validator: (v) => v == null || v.trim().isEmpty ? 'Campo obrigatório' : null),
-            TextFormField(controller: _targetCtrl, decoration: const InputDecoration(labelText: 'Valor Alvo'), keyboardType: TextInputType.number, validator: (v) => v == null || v.trim().isEmpty ? 'Campo obrigatório' : null),
-            TextFormField(controller: _monthlyCtrl, decoration: const InputDecoration(labelText: 'Contribuição Mensal'), keyboardType: TextInputType.number),
-            const SizedBox(height: 24),
+            TextFormField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Título'), validator: Validators.required),
+            const SizedBox(height: AppSpacing.lg),
+            TextFormField(controller: _targetCtrl, decoration: const InputDecoration(labelText: 'Valor Alvo', prefixText: 'R\$ '), keyboardType: TextInputType.number, validator: Validators.amount),
+            const SizedBox(height: AppSpacing.lg),
+            TextFormField(controller: _monthlyCtrl, decoration: const InputDecoration(labelText: 'Contribuição Mensal', prefixText: 'R\$ '), keyboardType: TextInputType.number),
+            const SizedBox(height: AppSpacing.xl),
             SizedBox(
               width: double.infinity,
               child: FilledButton(

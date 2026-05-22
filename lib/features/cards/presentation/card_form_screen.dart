@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../shared/utils/validators.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/models/card.dart' as domain;
 import 'card_providers.dart';
@@ -26,7 +28,6 @@ class _CardFormScreenState extends ConsumerState<CardFormScreen> {
   bool _isPhysical = true;
   bool _loading = false;
 
-  final _brands = ['visa', 'mastercard', 'amex', 'elo', 'hipercard', 'other'];
   final _uuid = const Uuid();
 
   @override
@@ -66,7 +67,7 @@ class _CardFormScreenState extends ConsumerState<CardFormScreen> {
 
     final userId = ref.read(userIdProvider);
     if (userId == null) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuário não autenticado')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Usuário não autenticado'), backgroundColor: AppColors.expense));
       setState(() => _loading = false);
       return;
     }
@@ -92,7 +93,7 @@ class _CardFormScreenState extends ConsumerState<CardFormScreen> {
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao salvar: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Erro ao salvar cartão'), backgroundColor: AppColors.expense));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -107,20 +108,22 @@ class _CardFormScreenState extends ConsumerState<CardFormScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: AppSpacing.screenPadding,
           children: [
             TextFormField(
               controller: _bankNameCtrl,
               decoration: const InputDecoration(labelText: 'Banco'),
-              validator: (v) => v == null || v.trim().isEmpty ? 'Campo obrigatório' : null,
+              validator: Validators.required,
             ),
+            const SizedBox(height: AppSpacing.lg),
             TextFormField(
               controller: _cardNameCtrl,
               decoration: const InputDecoration(labelText: 'Nome do Cartão'),
-              validator: (v) => v == null || v.trim().isEmpty ? 'Campo obrigatório' : null,
+              validator: Validators.required,
             ),
+            const SizedBox(height: AppSpacing.lg),
             DropdownButtonFormField<String>(
-              initialValue: _brand,
+              value: _brand,
               decoration: const InputDecoration(labelText: 'Bandeira'),
               items: const [
                 DropdownMenuItem(value: 'visa', child: Text('Visa')),
@@ -132,28 +135,34 @@ class _CardFormScreenState extends ConsumerState<CardFormScreen> {
               ],
               onChanged: (v) => setState(() => _brand = v ?? 'visa'),
             ),
+            const SizedBox(height: AppSpacing.lg),
             SwitchListTile(
               title: const Text('Cartão Físico'),
               value: _isPhysical,
               onChanged: (v) => setState(() => _isPhysical = v),
             ),
+            const SizedBox(height: AppSpacing.lg),
             TextFormField(
               controller: _limitCtrl,
-              decoration: const InputDecoration(labelText: 'Limite (R\$)'),
+              decoration: const InputDecoration(labelText: 'Limite (R\$)', prefixText: 'R\$ '),
               keyboardType: TextInputType.number,
-              validator: (v) => v == null || v.trim().isEmpty ? 'Campo obrigatório' : null,
+              validator: Validators.positiveNumber,
             ),
+            const SizedBox(height: AppSpacing.lg),
             TextFormField(
               controller: _closingDayCtrl,
               decoration: const InputDecoration(labelText: 'Dia Fechamento (1-31)'),
               keyboardType: TextInputType.number,
+              validator: Validators.dayOfMonth,
             ),
+            const SizedBox(height: AppSpacing.lg),
             TextFormField(
               controller: _dueDayCtrl,
               decoration: const InputDecoration(labelText: 'Dia Vencimento (1-31)'),
               keyboardType: TextInputType.number,
+              validator: Validators.dayOfMonth,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xl),
             SizedBox(
               width: double.infinity,
               child: FilledButton(

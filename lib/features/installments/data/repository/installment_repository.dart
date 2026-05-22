@@ -62,4 +62,24 @@ class InstallmentRepository {
       await _local.upsert(existing.copyWith(status: 'pending', paidAt: null));
     }
   }
+
+  Stream<List<Installment>> watchByCard(String cardId) {
+    return _local.watchByCard(cardId).map((rows) =>
+        rows.map((row) {
+          final r = row;
+          return Installment(
+            id: r.id,
+            purchaseId: r.purchaseId,
+            invoiceCycleId: r.invoiceCycleId,
+            userId: r.userId,
+            sequenceNumber: r.sequenceNumber,
+            totalInstallments: r.totalInstallments,
+            amount: r.amount,
+            dueDate: r.dueDate,
+            status: r.status,
+            paidAt: r.paidAt,
+            createdAt: r.createdAt,
+          );
+        }).toList());
+  }
 }

@@ -9,3 +9,7 @@ final debtListProvider = StreamProvider<List<Debt>>((ref) {
   final userId = ref.watch(userIdProvider);
   return ref.watch(debtRepositoryProvider).watchAll(userId);
 });
+
+final debtDetailProvider = FutureProvider.family<Debt?, String>((ref, debtId) {
+  return ref.watch(debtRepositoryProvider).getById(debtId);
+});

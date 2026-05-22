@@ -1,29 +1,28 @@
 import 'package:flutter/material.dart';
+import '../../features/cards/domain/models/card.dart';
 
 class CardSelector extends StatelessWidget {
-  final List<dynamic> cards;
-  final dynamic selected;
-  final ValueChanged<dynamic> onSelected;
+  final List<CardModel> cards;
+  final String? selectedId;
+  final ValueChanged<String?> onSelected;
 
   const CardSelector({
     super.key,
     required this.cards,
-    required this.selected,
+    required this.selectedId,
     required this.onSelected,
   });
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<dynamic>(
-      initialValue: selected,
+    return DropdownButtonFormField<String>(
+      value: selectedId,
       decoration: const InputDecoration(labelText: 'Cartão'),
       items: cards.map((card) => DropdownMenuItem(
-        value: card,
-        child: Text(card.cardName ?? card.toString()),
+        value: card.id,
+        child: Text('${card.bankName} - ${card.cardName}'),
       )).toList(),
-      onChanged: (value) {
-        if (value != null) onSelected(value);
-      },
+      onChanged: onSelected,
     );
   }
 }

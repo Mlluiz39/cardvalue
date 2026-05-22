@@ -9,3 +9,7 @@ final goalListProvider = StreamProvider<List<Goal>>((ref) {
   final userId = ref.watch(userIdProvider);
   return ref.watch(goalRepositoryProvider).watchAll(userId);
 });
+
+final goalDetailProvider = FutureProvider.family<Goal?, String>((ref, goalId) {
+  return ref.watch(goalRepositoryProvider).getById(goalId);
+});

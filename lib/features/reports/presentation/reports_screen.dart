@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../shared/utils/currency_formatter.dart';
 import 'reports_providers.dart';
 
 class ReportsScreen extends ConsumerWidget {
@@ -85,7 +87,7 @@ class ReportsScreen extends ConsumerWidget {
         ),
       ),
       loading: () => const Card(child: Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()))),
-      error: (e, _) => Card(child: Padding(padding: const EdgeInsets.all(16), child: Text('Erro: $e'))),
+      error: (e, _) => Card(child: Padding(padding: const EdgeInsets.all(16), child: Row(children: [Icon(Icons.error_outline, color: AppColors.expense), const SizedBox(width: 8), const Text('Erro ao carregar resumo')]))),
     );
   }
 
@@ -101,7 +103,7 @@ class ReportsScreen extends ConsumerWidget {
           Text(label, style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 4),
           Text(
-            'R\$ ${amount.toStringAsFixed(2)}',
+            CurrencyFormatter.format(amount),
             style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 14),
           ),
         ],
@@ -402,7 +404,7 @@ class ReportsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'R\$ ${c.usedAmount.toStringAsFixed(2)} / R\$ ${c.limitAmount.toStringAsFixed(2)}',
+                        '${CurrencyFormatter.format(c.usedAmount)} / ${CurrencyFormatter.format(c.limitAmount)}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
                       ),
                     ],

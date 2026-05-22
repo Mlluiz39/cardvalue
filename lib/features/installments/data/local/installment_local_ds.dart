@@ -55,4 +55,17 @@ class InstallmentLocalDs {
   Future<void> delete(String id) async {
     await (_db.delete(_db.installments)..where((i) => i.id.equals(id))).go();
   }
+
+  Stream<List<dynamic>> watchByCard(String cardId) {
+    final query = _db.select(_db.installments).join([
+      innerJoin(
+        _db.purchases,
+        _db.purchases.id.equalsExp(_db.installments.purchaseId),
+      ),
+    ])..where(_db.purchases.cardId.equals(cardId));
+
+    return query.watch().map((rows) {
+      return rows.map((row) => row.readTable(_db.installments)).toList();
+    });
+  }
 }

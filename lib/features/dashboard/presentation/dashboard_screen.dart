@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../shared/utils/currency_formatter.dart';
 import '../../../shared/widgets/expense_card.dart';
 import '../../../shared/widgets/category_pie_chart.dart';
 import '../../../shared/widgets/upcoming_bills.dart';
@@ -18,7 +20,7 @@ class DashboardScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Dashboard')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: AppSpacing.screenPadding,
         children: [
           Row(
             children: [
@@ -27,103 +29,94 @@ class DashboardScreen extends ConsumerWidget {
                   data: (total) => ExpenseCard(
                     title: 'Receitas do Mês',
                     amount: total,
-                    formattedAmount: 'R\$ ${total.toStringAsFixed(2)}',
+                    formattedAmount: CurrencyFormatter.format(total),
                     icon: Icons.trending_up,
-                    color: Colors.green,
+                    color: AppColors.income,
                   ),
                   loading: () => const ExpenseCard(
                     title: 'Receitas do Mês',
                     amount: 0,
                     formattedAmount: 'Carregando...',
                     icon: Icons.trending_up,
-                    color: Colors.green,
+                    color: AppColors.income,
                   ),
                   error: (_, _) => const ExpenseCard(
                     title: 'Receitas do Mês',
                     amount: 0,
                     formattedAmount: 'Erro',
                     icon: Icons.trending_up,
-                    color: Colors.green,
+                    color: AppColors.income,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: monthlyExpenseAsync.when(
                   data: (total) => ExpenseCard(
                     title: 'Gastos do Mês',
                     amount: total,
-                    formattedAmount: 'R\$ ${total.toStringAsFixed(2)}',
+                    formattedAmount: CurrencyFormatter.format(total),
                     icon: Icons.trending_down,
-                    color: Colors.red,
+                    color: AppColors.expense,
                   ),
                   loading: () => const ExpenseCard(
                     title: 'Gastos do Mês',
                     amount: 0,
                     formattedAmount: 'Carregando...',
                     icon: Icons.trending_down,
-                    color: Colors.red,
+                    color: AppColors.expense,
                   ),
                   error: (_, _) => const ExpenseCard(
                     title: 'Gastos do Mês',
                     amount: 0,
                     formattedAmount: 'Erro',
                     icon: Icons.trending_down,
-                    color: Colors.red,
+                    color: AppColors.expense,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          const Text('Gastos por Categoria', style: TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Gastos por Categoria', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: AppSpacing.sm),
           categoryBreakdownAsync.when(
             data: (categories) {
               if (categories.isEmpty) {
-                return const Card(
+                return Card(
                   child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Center(child: Text('Nenhum gasto este mês')),
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      children: [
+                        Icon(Icons.pie_chart_outline, size: 48, color: Colors.grey.shade400),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text('Nenhum gasto este mês', style: TextStyle(color: Colors.grey.shade600)),
+                      ],
+                    ),
                   ),
                 );
               }
-              
+
               final pieData = categories.map((c) => CategorySpending(
                 name: c.label,
                 amount: c.amount,
                 percentage: c.percentage,
-                color: _getColorForCategory(c.categoryId),
+                color: AppColors.getCategoryColor(c.categoryId),
               )).toList();
-              
+
               return CategoryPieChart(categories: pieData);
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Erro: $e')),
+            error: (e, _) => Center(child: Text('Erro ao carregar categorias', style: TextStyle(color: AppColors.expense))),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           upcomingBillsAsync.when(
             data: (bills) => UpcomingBills(bills: bills),
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Erro: $e')),
+            error: (e, _) => Center(child: Text('Erro ao carregar contas', style: TextStyle(color: AppColors.expense))),
           ),
         ],
       ),
     );
-  }
-
-  Color _getColorForCategory(String categoryId) {
-    switch (categoryId) {
-      case 'food': return Colors.orange;
-      case 'transport': return Colors.blue;
-      case 'housing': return Colors.brown;
-      case 'health': return Colors.red;
-      case 'education': return Colors.purple;
-      case 'entertainment': return Colors.pink;
-      case 'clothing': return Colors.teal;
-      case 'salary': return Colors.green;
-      case 'freelance': return Colors.lightGreen;
-      default: return Colors.grey;
-    }
   }
 }

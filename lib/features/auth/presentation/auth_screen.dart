@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:uuid/uuid.dart';
 import 'auth_providers.dart';
 
-class LoginScreen extends ConsumerWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  bool _loading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       body: Center(
         child: Padding(
@@ -16,38 +24,43 @@ class LoginScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.account_balance_wallet, size: 80, color: Colors.blue),
+              Icon(Icons.account_balance_wallet, size: 80, color: theme.colorScheme.primary),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'CardValue',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                style: theme.textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Seu gerenciador financeiro pessoal',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey),
               ),
               const SizedBox(height: 48),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    ref.read(localUserProvider.notifier).state = LocalUser(
-                      id: const Uuid().v4(),
-                      name: 'Usuário',
-                    );
-                    context.go('/dashboard');
-                  },
-                  style: ElevatedButton.styleFrom(
+                child: FilledButton(
+                  onPressed: _loading
+                      ? null
+                      : () async {
+                          setState(() => _loading = true);
+                          try {
+                            await ref.read(authNotifierProvider.notifier).login('Usuário');
+                          } finally {
+                            if (mounted) setState(() => _loading = false);
+                          }
+                        },
+                  style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('Começar', style: TextStyle(fontSize: 18)),
+                  child: _loading
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('Começar', style: TextStyle(fontSize: 18)),
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Todos os dados ficam armazenados no seu dispositivo',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
             ],

@@ -13,6 +13,8 @@ class CardModel {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  final double usedAmount;
+
   CardModel({
     required this.id,
     required this.userId,
@@ -27,6 +29,7 @@ class CardModel {
     this.isActive = true,
     DateTime? createdAt,
     DateTime? updatedAt,
+    this.usedAmount = 0.0,
   })  : createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
 
@@ -44,6 +47,7 @@ class CardModel {
     isActive: json['is_active'] as bool? ?? true,
     createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
     updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
+    usedAmount: (json['used_amount'] as num?)?.toDouble() ?? 0.0,
   );
 
   Map<String, dynamic> toJson() => {
@@ -60,8 +64,8 @@ class CardModel {
     'is_active': isActive,
     'created_at': createdAt.toIso8601String(),
     'updated_at': updatedAt.toIso8601String(),
+    'used_amount': usedAmount,
   };
 
-  double get usedAmount => 0.0; // computed from purchases
   double get availableLimit => limitAmount - usedAmount;
 }

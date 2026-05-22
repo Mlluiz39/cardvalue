@@ -19,7 +19,10 @@ class InstallmentProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = totalCount > 0 ? paidCount / totalCount : 0.0;
-    return Column(
+    return Semantics(
+      label: 'Progresso de parcelas: $paidCount de $totalCount pagas. '
+          'Valor pago: R\$ ${paidAmount.toStringAsFixed(2)} de R\$ ${totalAmount.toStringAsFixed(2)}',
+      child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
@@ -46,6 +49,7 @@ class InstallmentProgress extends StatelessWidget {
         Text('R\$ ${paidAmount.toStringAsFixed(2)} / R\$ ${totalAmount.toStringAsFixed(2)}',
             style: const TextStyle(fontSize: 12, color: Colors.grey)),
       ],
+    ),
     );
   }
 }

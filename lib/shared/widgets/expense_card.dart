@@ -24,7 +24,10 @@ class ExpenseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Semantics(
+      label: '$title: $formattedAmount${subtitle != null ? ", $subtitle" : ""}',
+      button: onTap != null,
+      child: Card(
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -39,8 +42,12 @@ class ExpenseCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: Theme.of(context).textTheme.bodySmall),
+                    const SizedBox(height: 4),
                     Text(formattedAmount, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                    if (subtitle != null) Text(subtitle!, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(subtitle!, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                    ],
                   ],
                 ),
               ),
@@ -49,6 +56,7 @@ class ExpenseCard extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

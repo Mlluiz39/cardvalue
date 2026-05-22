@@ -13,41 +13,84 @@ class CardRepository {
   }
 
   Stream<List<domain.CardModel>> watchAll(String userId) {
-    return _local.watchAll(userId).map((rows) =>
-        rows.map((row) => domain.CardModel(
-          id: row.id,
-          userId: row.userId,
-          bankName: row.bankName,
-          cardName: row.cardName,
-          brand: row.brand,
-          cardType: row.cardType,
-          limitAmount: row.limitAmount,
-          closingDay: row.closingDay,
-          dueDay: row.dueDay,
-          color: row.color,
-          isActive: row.isActive,
-          createdAt: row.createdAt,
-          updatedAt: row.updatedAt,
-        )).toList());
+    final query = _db.customSelect(
+      '''
+      SELECT c.*, COALESCE(SUM(i.amount), 0.0) AS used_amount
+      FROM cards c
+      LEFT JOIN purchases p ON p.card_id = c.id
+      LEFT JOIN installments i ON i.purchase_id = p.id AND i.status = 'pending'
+      WHERE c.user_id = ?
+      GROUP BY c.id
+      ''',
+      variables: [Variable.withString(userId)],
+      readsFrom: {_db.cards, _db.purchases, _db.installments},
+    );
+
+    return query.watch().map((rows) =>
+        rows.map((row) {
+          final id = row.read<String>('id');
+          final userId = row.read<String>('user_id');
+          final bankName = row.read<String>('bank_name');
+          final cardName = row.read<String>('card_name');
+          final brand = row.read<String>('brand');
+          final cardType = row.read<String>('card_type');
+          final limitAmount = row.read<double>('limit_amount');
+          final closingDay = row.read<int>('closing_day');
+          final dueDay = row.read<int>('due_day');
+          final color = row.readNullable<String>('color');
+          final isActive = row.read<bool>('is_active');
+          final createdAt = row.read<DateTime>('created_at');
+          final updatedAt = row.read<DateTime>('updated_at');
+          final usedAmount = row.read<double>('used_amount');
+
+          return domain.CardModel(
+            id: id,
+            userId: userId,
+            bankName: bankName,
+            cardName: cardName,
+            brand: brand,
+            cardType: cardType,
+            limitAmount: limitAmount,
+            closingDay: closingDay,
+            dueDay: dueDay,
+            color: color,
+            isActive: isActive,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            usedAmount: usedAmount,
+          );
+        }).toList());
   }
 
   Future<domain.CardModel?> getById(String id) async {
-    final local = await _local.getById(id);
-    if (local != null) {
+    final row = await _db.customSelect(
+      '''
+      SELECT c.*, COALESCE(SUM(i.amount), 0.0) AS used_amount
+      FROM cards c
+      LEFT JOIN purchases p ON p.card_id = c.id
+      LEFT JOIN installments i ON i.purchase_id = p.id AND i.status = 'pending'
+      WHERE c.id = ?
+      GROUP BY c.id
+      ''',
+      variables: [Variable.withString(id)],
+    ).getSingleOrNull();
+
+    if (row != null) {
       return domain.CardModel(
-        id: local.id,
-        userId: local.userId,
-        bankName: local.bankName,
-        cardName: local.cardName,
-        brand: local.brand,
-        cardType: local.cardType,
-        limitAmount: local.limitAmount,
-        closingDay: local.closingDay,
-        dueDay: local.dueDay,
-        color: local.color,
-        isActive: local.isActive,
-        createdAt: local.createdAt,
-        updatedAt: local.updatedAt,
+        id: row.read<String>('id'),
+        userId: row.read<String>('user_id'),
+        bankName: row.read<String>('bank_name'),
+        cardName: row.read<String>('card_name'),
+        brand: row.read<String>('brand'),
+        cardType: row.read<String>('card_type'),
+        limitAmount: row.read<double>('limit_amount'),
+        closingDay: row.read<int>('closing_day'),
+        dueDay: row.read<int>('due_day'),
+        color: row.readNullable<String>('color'),
+        isActive: row.read<bool>('is_active'),
+        createdAt: row.read<DateTime>('created_at'),
+        updatedAt: row.read<DateTime>('updated_at'),
+        usedAmount: row.read<double>('used_amount'),
       );
     }
     return null;
@@ -68,12 +111,33 @@ class CardRepository {
   }
 
   Future<List<domain.CardModel>> getAll(String userId) async {
-    final rows = await (_db.select(_db.cards)..where((c) => c.userId.equals(userId))).get();
+    final rows = await _db.customSelect(
+      '''
+      SELECT c.*, COALESCE(SUM(i.amount), 0.0) AS used_amount
+      FROM cards c
+      LEFT JOIN purchases p ON p.card_id = c.id
+      LEFT JOIN installments i ON i.purchase_id = p.id AND i.status = 'pending'
+      WHERE c.user_id = ?
+      GROUP BY c.id
+      ''',
+      variables: [Variable.withString(userId)],
+    ).get();
+
     return rows.map((row) => domain.CardModel(
-      id: row.id, userId: row.userId, bankName: row.bankName,
-      cardName: row.cardName, brand: row.brand, cardType: row.cardType,
-      limitAmount: row.limitAmount, closingDay: row.closingDay, dueDay: row.dueDay,
-      color: row.color, isActive: row.isActive, createdAt: row.createdAt, updatedAt: row.updatedAt,
+      id: row.read<String>('id'),
+      userId: row.read<String>('user_id'),
+      bankName: row.read<String>('bank_name'),
+      cardName: row.read<String>('card_name'),
+      brand: row.read<String>('brand'),
+      cardType: row.read<String>('card_type'),
+      limitAmount: row.read<double>('limit_amount'),
+      closingDay: row.read<int>('closing_day'),
+      dueDay: row.read<int>('due_day'),
+      color: row.readNullable<String>('color'),
+      isActive: row.read<bool>('is_active'),
+      createdAt: row.read<DateTime>('created_at'),
+      updatedAt: row.read<DateTime>('updated_at'),
+      usedAmount: row.read<double>('used_amount'),
     )).toList();
   }
 

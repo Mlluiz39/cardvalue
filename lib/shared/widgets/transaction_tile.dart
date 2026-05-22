@@ -26,15 +26,19 @@ class TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: CircleAvatar(backgroundColor: categoryColor.withValues(alpha: 0.2), child: Icon(categoryIcon, color: categoryColor, size: 20)),
-      title: Text(description),
-      subtitle: Text('$category • ${paymentMethod ?? ""}'),
-      trailing: Text(
-        formattedAmount,
-        style: TextStyle(color: isIncome ? Colors.green : Colors.red, fontWeight: FontWeight.bold),
+    return Semantics(
+      label: '${isIncome ? "Receita" : "Despesa"}: $description, $formattedAmount',
+      button: true,
+      child: ListTile(
+        leading: CircleAvatar(backgroundColor: categoryColor.withValues(alpha: 0.2), child: Icon(categoryIcon, color: categoryColor, size: 20)),
+        title: Text(description),
+        subtitle: Text('$category${paymentMethod != null ? " • $paymentMethod" : ""}'),
+        trailing: Text(
+          formattedAmount,
+          style: TextStyle(color: isIncome ? Colors.green : Colors.red, fontWeight: FontWeight.bold),
+        ),
+        onTap: onTap,
       ),
-      onTap: onTap,
     );
   }
 }
